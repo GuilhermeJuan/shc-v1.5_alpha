@@ -1,0 +1,189 @@
+Codigo com banco de dados da tela register!
+
+-----------------------------------------------------------
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
+import * as Animatable from 'react-native-animatable';
+import Parse from 'parse/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+Parse.setAsyncStorage(AsyncStorage);
+const Api_ID = 'Lea6nLduj3jDDWigyyoBEcO1N1VjeeFkqR20EZwp';
+const JS_key = 'X2nYP56Y3FKwrLuwc0pQMNKv6IjhBknzjlhgNR3v';
+Parse.initialize(Api_ID, JS_key);
+Parse.serverURL = 'https://parseapi.back4app.com/';
+
+export default function Register({ navigation }) {
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [tipoUsuario, setTipoUsuario] = useState('Paciente'); // Valor padrão 'Paciente'
+
+  const registerUser = async () => {
+    const Usuario = Parse.Object.extend('Usuario');
+    const query = new Parse.Query(Usuario);
+
+    // Verifica se o email já existe
+    query.equalTo('Email', email);
+    const results = await query.find();
+
+    if (results.length > 0) {
+      // Usuário com este email já existe
+      console.error('Um usuário com este email já existe.');
+    } else {
+      // Cria um novo usuário
+      const usuario = new Usuario();
+
+      usuario.set({
+        'Nome': nome,
+        'Email': email,
+        'Senha': senha,
+        'TipoUsuario': tipoUsuario,
+      });
+
+      try {
+        await usuario.save();
+        console.log('Usuário registrado com sucesso!');
+        // Aqui você pode adicionar navegação para a próxima tela, se necessário
+        navigation.navigate('Login');
+      } catch (error) {
+        console.error('Erro ao registrar usuário:', error);
+      }
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Animatable.View animation="fadeInLeft" delay={500} style={styles.containerHeader}>
+        <Text style={styles.message}>Cadastro</Text>
+      </Animatable.View>
+
+      <Animatable.View animation="fadeInUp" style={styles.containerForm}>
+        <Text style={styles.title}>Nome Completo</Text>
+        <TextInput
+          placeholder="Digite seu nome completo..."
+          style={styles.input}
+          value={nome}
+          onChangeText={(text) => setNome(text)}
+        />
+
+        <Text style={styles.title}>Email</Text>
+        <TextInput
+          placeholder="Digite seu email..."
+          style={styles.input}
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+        />
+
+        <Text style={styles.title}>Senha</Text>
+        <TextInput
+          placeholder="Digite sua senha..."
+          secureTextEntry={true}
+          style={styles.input}
+          value={senha}
+          onChangeText={(text) => setSenha(text)}
+        />
+
+        <Text style={styles.title}>Tipo de Usuário</Text>
+        <RNPickerSelect
+          style={pickerSelectStyles}
+          onValueChange={(value) => setTipoUsuario(value)}
+          items={[
+            { label: 'Paciente', value: 'Paciente' },
+            { label: 'Cuidador', value: 'Cuidador' },
+          ]}
+          value={tipoUsuario} // use o estado aqui
+        />
+
+        <TouchableOpacity style={styles.button} onPress={registerUser}>
+          <Text style={styles.buttonText}>Cadastrar</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.buttonRegister} onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.registerText}>Já tenho uma conta. Quero fazer login!</Text>
+        </TouchableOpacity>
+      </Animatable.View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  containerHeader: {
+    marginTop: '14%',
+    marginBottom: '8%',
+    paddingStart: '5%',
+  },
+  message: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  containerForm: {
+    backgroundColor: '#FFF',
+    flex: 1,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingStart: '5%',
+    paddingEnd: '5%',
+  },
+  title: {
+    fontSize: 20,
+    marginTop: 28,
+  },
+  input: {
+    borderBottomWidth: 1,
+    height: 40,
+    marginBottom: 12,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#0b203d',
+    width: '100%',
+    borderRadius: 4,
+    paddingVertical: 8,
+    marginTop: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonRegister: {
+    marginTop: 14,
+    alignSelf: 'center',
+  },
+  registerText: {
+    color: '#a1a1a1',
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30, // to ensure the text is never behind the icon
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 0.5,
+    borderColor: 'purple',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30, // to ensure the text is never behind the icon
+  },
+});
+
